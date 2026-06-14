@@ -39,6 +39,7 @@ growi-plugin-toc/
 ├── vite.config.ts                # build.manifest: 'manifest.json' を明示
 ├── .gitignore
 ├── .npmrc
+├── pnpm-workspace.yaml           # pnpm approve-builds で自動生成（コミット必須）
 └── dist/                         # ビルド成果物（コミット必須）
     ├── manifest.json
     └── assets/
@@ -69,10 +70,10 @@ GROWI はプラグインインストール時に **`pnpm install` も `pnpm buil
 
 GROWI が読みに行く manifest のパスは以下の順で fallback:
 
-1. `dist/.vite/manifest.json` (Vite 5 デフォルト)
-2. `dist/manifest.json` (Vite 4 互換 / 明示設定時)
+1. `dist/.vite/manifest.json` (Vite デフォルト)
+2. `dist/manifest.json` (明示設定時)
 
-Vite 5+ では `vite.config.ts` で `build.manifest: 'manifest.json'` を明示してプロジェクト直下風のパスに出力するのが無難。
+`vite.config.ts` で `build.manifest: 'manifest.json'` を明示しないと GROWI が manifest を見つけられない。Vite 8 でも同様に明示が必要。
 
 ```ts
 export default defineConfig({
@@ -86,7 +87,7 @@ export default defineConfig({
 
 ### 3. pnpm のビルドスクリプト承認 (pnpm 11+ では別対応が必要)
 
-`esbuild` (Vite 依存) はインストール時にビルドスクリプトを実行する必要があるが、pnpm はデフォルトでブロックする。
+`esbuild` はインストール時にビルドスクリプトを実行する必要があるが、pnpm はデフォルトでブロックする。Vite 8 では esbuild が peerDependency になっているが、依然として承認が必要。
 
 **pnpm 8〜10**: `package.json` の `pnpm.onlyBuiltDependencies` で明示する。
 

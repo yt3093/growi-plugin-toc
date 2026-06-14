@@ -40,3 +40,15 @@ GROWI 管理画面 → プラグイン → GitHub URL に本リポジトリの U
 pnpm install
 pnpm build    # dist/ にビルド成果物が生成される
 ```
+
+### pnpm 11+ を使う場合
+
+初回 `pnpm install` で `ERR_PNPM_IGNORED_BUILDS` が出た場合は以下を実行:
+
+```bash
+pnpm approve-builds --all   # pnpm-workspace.yaml が生成される
+pnpm install                 # 再実行して esbuild の postinstall を完了
+pnpm build
+```
+
+生成された `pnpm-workspace.yaml` は git にコミットすること（GROWI プラグインは `dist/` 含む全ファイルが必要）。
