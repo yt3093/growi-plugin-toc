@@ -80,8 +80,6 @@ function reconstructSource(children: PhrasingContent[]): string | null {
 
 export const remarkToc: Plugin<[], Root> = () => (tree) => {
   const headings = collectHeadings(tree);
-  // eslint-disable-next-line no-console
-  console.log('[growi-plugin-toc] remarkToc run, headings=', headings.length);
 
   if (headings.length === 0) return;
 
@@ -94,9 +92,7 @@ export const remarkToc: Plugin<[], Root> = () => (tree) => {
     const match = TOC_PATTERN.exec(reconstructed.trim());
     if (match == null) return;
 
-    const maxDepth = match[1] != null ? parseInt(match[1], 10) : 6;
-    // eslint-disable-next-line no-console
-    console.log('[growi-plugin-toc] TOC matched, maxDepth=', maxDepth);
+    const maxDepth = match[1] != null ? Math.min(6, Math.max(1, parseInt(match[1], 10))) : 6;
     (parent.children as Root['children'])[index] = buildTocList(headings, maxDepth);
   });
 };

@@ -1,9 +1,16 @@
 import { remarkToc } from './src/remark-toc';
 import './src/styles/toc.css';
 
-import type { GrowiFacade, RendererOptions } from './src/types';
+import type { GrowiFacade, OptionsGenerators, RendererOptions } from './src/types';
 
 declare const growiFacade: GrowiFacade;
+
+type SavedState = {
+  optionsGenerators: OptionsGenerators;
+  original: OptionsGenerators['customGenerateViewOptions'];
+};
+
+let savedState: SavedState | null = null;
 
 const activate = (): void => {
   if (growiFacade == null || growiFacade.markdownRenderer == null) {
@@ -12,31 +19,31 @@ const activate = (): void => {
     return;
   }
 
-  // eslint-disable-next-line no-console
-  console.log('[growi-plugin-toc] activated');
-
   const { optionsGenerators } = growiFacade.markdownRenderer;
-  const originalCustomViewOptions = optionsGenerators.customGenerateViewOptions;
+  const original = optionsGenerators.customGenerateViewOptions;
+  savedState = { optionsGenerators, original };
 
   optionsGenerators.customGenerateViewOptions = (...args: unknown[]): RendererOptions => {
-    const options: RendererOptions = originalCustomViewOptions != null
-      ? originalCustomViewOptions(...args)
+    const options: RendererOptions = original != null
+      ? original(...args)
       : optionsGenerators.generateViewOptions(...args);
 
     options.remarkPlugins = [...(options.remarkPlugins ?? []), remarkToc];
-    // eslint-disable-next-line no-console
-    console.log('[growi-plugin-toc] remarkPlugins extended', options.remarkPlugins.length);
     return options;
   };
 };
 
-const deactivate = (): void => {};
+const deactivate = (): void => {
+  if (savedState == null) return;
+  savedState.optionsGenerators.customGenerateViewOptions = savedState.original;
+  savedState = null;
+};
 
-if ((window as any).pluginActivators == null) {
-  (window as any).pluginActivators = {};
+if (window.pluginActivators == null) {
+  window.pluginActivators = {};
 }
 
-(window as any).pluginActivators['growi-plugin-toc'] = {
+window.pluginActivators['growi-plugin-toc'] = {
   activate,
   deactivate,
 };
