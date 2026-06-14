@@ -1,0 +1,11 @@
+{
+  "client-entry.tsx": {
+    "file": "assets/client-entry-YmCM_aEL.js",
+    "name": "client-entry",
+    "src": "client-entry.tsx",
+    "isEntry": true,
+    "css": [
+      "assets/client-entry-Bzlz_BIV.css"
+    ]
+  }
+}

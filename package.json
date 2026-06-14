@@ -1,0 +1,42 @@
+{
+  "name": "growi-plugin-toc",
+  "version": "1.0.0",
+  "description": "GROWI plugin that expands [TOC] and [TOC level=N] markdown syntax into an inline table of contents",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src client-entry.tsx --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "github-slugger": "^2.0.0",
+    "mdast-util-to-string": "^4.0.0",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/unist": "^3.0.0",
+    "unified": "^11.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "vite": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "growiPlugin": {
+    "schemaVersion": "4",
+    "types": [
+      "script"
+    ]
+  }
+}

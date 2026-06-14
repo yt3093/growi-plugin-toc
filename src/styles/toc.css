@@ -1,0 +1,44 @@
+.growi-plugin-toc {
+  border: 1px solid var(--bs-border-color, #e0e0e0);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  background-color: var(--bs-tertiary-bg, #fafafa);
+  display: inline-block;
+  min-width: 200px;
+}
+
+.growi-plugin-toc::before {
+  content: "目次";
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: var(--bs-body-color, #333);
+}
+
+.growi-plugin-toc li {
+  margin: 0.15rem 0;
+  list-style: disc;
+}
+
+.growi-plugin-toc a {
+  text-decoration: none;
+  color: var(--bs-link-color, #0070f3);
+}
+
+.growi-plugin-toc a:hover {
+  color: var(--bs-link-hover-color, #0056b3);
+  text-decoration: underline;
+}
+
+@media print {
+  .growi-plugin-toc {
+    break-inside: avoid;
+    background-color: transparent;
+    border-color: #ccc;
+  }
+
+  .growi-plugin-toc a::after {
+    content: none;
+  }
+}
