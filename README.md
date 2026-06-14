@@ -1,6 +1,6 @@
 # growi-plugin-toc
 
-GROWI プラグイン — Markdown 内に `[TOC]` と書くと、その位置にページ内の見出し一覧（目次）を表示します。
+Markdown 内に `[TOC]` と書くと、その位置にページ内の見出し一覧（目次）を表示する GROWI Script プラグインです。
 
 ## 機能
 
@@ -34,23 +34,45 @@ GROWI プラグイン — Markdown 内に `[TOC]` と書くと、その位置に
 
 ## インストール
 
-GROWI 管理画面 → プラグイン → GitHub URL に本リポジトリの URL を入力してください。
+GROWI の管理画面 `/admin/plugins` でこのリポジトリの URL を入力してインストールしてください。
 
-## 開発
+インストール後、プラグインを有効化すると `[TOC]` が目次に展開されます。
+
+> **注意**: コード更新を反映する際は、管理画面でプラグインを**削除 → 再インストール**してください。有効/無効のトグルのみでは zip が取り直されません。
+
+## 開発・ビルド
+
+### セットアップ
 
 ```bash
 pnpm install
-pnpm build    # dist/ にビルド成果物が生成される
+pnpm approve-builds --all   # 初回のみ（pnpm 11+ の場合）
+pnpm install                 # esbuild の postinstall を実行するため再度
 ```
 
-### pnpm 11+ を使う場合
-
-初回 `pnpm install` で `ERR_PNPM_IGNORED_BUILDS` が出た場合は以下を実行:
+### ビルド
 
 ```bash
-pnpm approve-builds --all   # pnpm-workspace.yaml が生成される
-pnpm install                 # 再実行して esbuild の postinstall を完了
 pnpm build
 ```
 
-生成された `pnpm-workspace.yaml` は git にコミットすること（GROWI プラグインは `dist/` 含む全ファイルが必要）。
+`dist/manifest.json` と `dist/assets/` が生成されます。`dist/` はコミット必須です（GROWI はビルドを実行しないため）。
+
+### 動作確認チェックリスト
+
+- [ ] `pnpm build` が成功し `dist/manifest.json` が出力される
+- [ ] GROWI で削除 → 再インストール後、DevTools Network で `client-entry-*.js` が 200 で取得される
+- [ ] Markdown ページに `[TOC]` と書くと見出し一覧が表示される
+- [ ] 各項目クリックで該当見出しへスクロール（アンカーリンク）できる
+- [ ] `[TOC level=2]` で h3 以下の見出しが表示されない
+- [ ] `[TOC level=0]` / `[TOC level=99]` などの異常値で意図しない表示にならない
+- [ ] 見出しがない / `[TOC]` がないページで副作用が起きない
+- [ ] 同名見出しが複数ある場合、slug が `-1`, `-2` 連番になってリンクが正確に機能する
+- [ ] GROWI のダークモード切り替え時に TOC の配色が自動追従する
+- [ ] ブラウザの印刷プレビューで TOC が途中でページ分断されない
+- [ ] プラグインを無効化すると `[TOC]` が展開されない状態に戻る
+- [ ] 無効化 → 再有効化を繰り返しても TOC が正常に動作する
+
+## ライセンス
+
+MIT
