@@ -17,8 +17,8 @@
 | slug 生成 | `github-slugger` で GROWI 内部の `rehype-slug` と互換 |
 | 深さフィルタ | `level=N` 指定時は `depth > N` の見出しを除外。省略時は N=6（全件） |
 | 見出し 0 件 | `[TOC]` は展開されない（早期 return） |
-| スタイル | `src/styles/toc.css` 内 `.growi-plugin-toc` が枠線・背景・`::before` 疑似要素で "目次" を表示 |
-| deactivate | 空（remark プラグインのラップを巻き戻していない） |
+| スタイル | `src/styles/toc.css` 内 `.growi-plugin-toc`。配色は Bootstrap 5 CSS 変数 (`--bs-border-color` / `--bs-tertiary-bg` / `--bs-body-color` / `--bs-link-color`) を使用し GROWI ダークモードに自動追従。フォールバック値付き。`@media print` で折り返し防止・背景透過 |
+| deactivate | モジュールスコープの `savedState` に元の `customGenerateViewOptions` を退避し、`deactivate()` 呼び出しで復元する |
 
 ## アーキテクチャ
 
@@ -49,12 +49,14 @@ growi-plugin-toc/
 
 ### 主要な実装ポイント
 
-- **`activate()`**: `growiFacade.markdownRenderer.optionsGenerators.customGenerateViewOptions` をラップし、`options.remarkPlugins` 末尾に `remarkToc` を追加
+- **`activate()`**: `growiFacade.markdownRenderer.optionsGenerators.customGenerateViewOptions` をラップし、`options.remarkPlugins` 末尾に `remarkToc` を追加。元の実装はモジュールスコープの `savedState` に退避する
+- **`deactivate()`**: `savedState.optionsGenerators.customGenerateViewOptions` を `savedState.original` に戻し `savedState = null` にリセット。これにより複数回の有効化/無効化でも正しく動作する
 - **`collectHeadings(tree)`**: `visit(tree, 'heading', ...)` で全 heading を走査し `GithubSlugger` インスタンスで slug を採番（同名見出しの連番 `-1`, `-2` も自動）
 - **`buildListItem(entry)`**: `data.hProperties.className` に配列で `['growi-plugin-toc-item-l${depth}']` を渡すことで、mdast→hast 変換後に `class` 属性として出力される。`dangerouslySetInnerHTML` / `innerHTML` / `html` ノードは一切使わない
 - **`buildTocList(headings, maxDepth)`**: `depth <= maxDepth` でフィルタして `list` ノードを生成。`data.hProperties.className: ['growi-plugin-toc']` を付与
 - **`reconstructSource(children)`**: `[TOC]` は remark-parse によって `linkReference` ノードに化けるため、`text` と `linkReference` の両方から元文字列を再構築してから regex マッチする（下記「ハマりどころ 5」参照）
-- **`[TOC level=N]` のパース**: `TOC_PATTERN = /^\[TOC(?:\s+level=(\d+))?\]$/i`。`match[1]` が `undefined` のとき `maxDepth = 6`
+- **`[TOC level=N]` のパース**: `TOC_PATTERN = /^\[TOC(?:\s+level=(\d+))?\]$/i`。`match[1]` が `undefined` のとき `maxDepth = 6`。指定値は `Math.min(6, Math.max(1, parseInt(...)))` で 1〜6 に clamp
+- **`window` の型付け**: `src/types.ts` に `declare global { interface Window { pluginActivators?: ... } }` を追加し、`client-entry.tsx` で `(window as any)` キャストを排除している
 
 ## ハマりどころ (必読)
 
@@ -147,13 +149,16 @@ GROWI 管理画面 `/admin/plugins` で **削除 → 再インストール**。
 
 1. `pnpm build` が成功し `dist/manifest.json` が出力される
 2. GROWI で削除 → 再インストール後、DevTools Network で `client-entry-*.js` が 200 で取得される
-3. Console に `[growi-plugin-toc] activated` のログが出る
-4. Markdown ページに `[TOC]` と書くと見出し一覧が表示される
-5. 各項目クリックで該当見出しへスクロール（アンカーリンク）できる
-6. `[TOC level=2]` で h3 以下の見出しが表示されない
+3. Markdown ページに `[TOC]` と書くと見出し一覧が表示される
+4. 各項目クリックで該当見出しへスクロール（アンカーリンク）できる
+5. `[TOC level=2]` で h3 以下の見出しが表示されない
+6. `[TOC level=0]` / `[TOC level=99]` などの異常値で意図しない表示にならない（1〜6 に clamp）
 7. 見出しがない / `[TOC]` がないページで副作用が起きない
 8. 同名見出しが複数ある場合、slug が `-1`, `-2` 連番になってリンクが正確に機能する
-9. プラグインを無効化すると `[TOC]` がそのまま（展開されない状態に）戻る
+9. GROWI のダークモード切り替え時に TOC の配色（ボーダー・背景・テキスト・リンク）が自動追従する
+10. ブラウザの印刷プレビューで TOC が途中でページ分断されない
+11. プラグインを無効化すると `[TOC]` が展開されない状態に戻る
+12. 無効化 → 再有効化を繰り返しても TOC が正常に動作する（`deactivate` による復元が正常）
 
 ## 会話ガイドライン
 
