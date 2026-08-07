@@ -16,34 +16,37 @@
 
 .growi-plugin-toc li {
   margin: 0.1rem 0;
-  list-style: none;
+  list-style: none !important;
 }
 
 .growi-plugin-toc ul {
-  margin: 0.15rem 0 0 1.2em;
-  padding: 0;
-  list-style: none;
+  list-style: none !important;
+  margin: 0.15rem 0 0 1.2em !important;
+  padding: 0 !important;
 }
 
 .growi-plugin-toc a {
   display: block;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  text-decoration: none;
-  color: var(--bs-body-color, #333);
+  text-decoration: none !important;
+  color: var(--bs-body-color, #333) !important;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .growi-plugin-toc a::before {
   content: "\203A";
+  display: inline-block;
   margin-right: 0.4em;
   color: var(--bs-primary, #0d6efd);
   font-weight: bold;
+  font-size: 1rem;
 }
 
 .growi-plugin-toc a:hover {
   background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
-  color: var(--bs-primary, #0d6efd);
+  color: var(--bs-primary, #0d6efd) !important;
+  text-decoration: none !important;
 }
 
 .growi-plugin-toc-item-l1 > a {
@@ -54,7 +57,7 @@
 .growi-plugin-toc-item-l2 > a {
   font-size: 0.92rem;
   font-weight: 500;
-  color: var(--bs-secondary-color, #555);
+  opacity: 0.85;
 }
 
 .growi-plugin-toc-item-l3 > a,
@@ -63,7 +66,7 @@
 .growi-plugin-toc-item-l6 > a {
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--bs-secondary-color, #777);
+  opacity: 0.7;
 }
 
 @media print {
