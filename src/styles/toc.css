@@ -10,25 +10,32 @@
   content: "Table of Contents";
   display: block;
   font-weight: bold;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   color: var(--bs-body-color, #333);
 }
 
 .growi-plugin-toc li {
-  margin: 0.1rem 0;
+  margin: 0.05rem 0;
   list-style: none !important;
 }
 
 .growi-plugin-toc ul {
   list-style: none !important;
-  margin: 0.15rem 0 0 1.2em !important;
+  margin: 0.1rem 0 0 0 !important;
   padding: 0 !important;
 }
 
+.growi-plugin-toc-item-l1 > ul { margin-left: 1.2em !important; }
+.growi-plugin-toc-item-l2 > ul { margin-left: 1.1em !important; }
+.growi-plugin-toc-item-l3 > ul { margin-left: 0.9em !important; }
+.growi-plugin-toc-item-l4 > ul,
+.growi-plugin-toc-item-l5 > ul { margin-left: 0.7em !important; }
+
 .growi-plugin-toc a {
   display: block;
-  padding: 0.2rem 0.5rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
+  line-height: 1.3;
   text-decoration: none !important;
   color: var(--bs-body-color, #333) !important;
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -43,10 +50,22 @@
   font-size: 1rem;
 }
 
-.growi-plugin-toc a:hover {
+.growi-plugin-toc a:hover,
+.growi-plugin-toc a:focus-visible {
   background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
   color: var(--bs-primary, #0d6efd) !important;
   text-decoration: none !important;
+}
+
+.growi-plugin-toc a:focus-visible {
+  outline: 2px solid var(--bs-primary, #0d6efd);
+  outline-offset: 2px;
+}
+
+/* GROWI の固定ヘッダーに隠れないよう、アンカージャンプ先の見出しにスクロール余白を確保する。
+   ヘッダー高さの実測値に応じて要調整（現状は目安値） */
+h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
+  scroll-margin-top: 70px;
 }
 
 .growi-plugin-toc-item-l1 > a {
