@@ -1,5 +1,5 @@
 .growi-plugin-toc {
-  border-left: 3px solid var(--bs-link-color, #0070f3);
+  border-left: 3px solid var(--bs-primary, #0d6efd);
   padding: 0.25rem 0 0.25rem 1rem;
   margin: 1rem 0;
   background-color: transparent;
