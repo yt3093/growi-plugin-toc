@@ -1,47 +1,97 @@
 .growi-plugin-toc {
-  border: 1px solid var(--bs-border-color, #e0e0e0);
-  border-radius: 4px;
-  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--bs-primary, #0d6efd);
+  padding: 0.25rem 0 0.25rem 1rem;
   margin: 1rem 0;
-  background-color: var(--bs-tertiary-bg, #fafafa);
+  background-color: transparent;
   display: inline-block;
-  min-width: 200px;
 }
 
 .growi-plugin-toc::before {
-  content: "目次";
+  content: "Table of Contents";
   display: block;
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
   color: var(--bs-body-color, #333);
 }
 
 .growi-plugin-toc li {
-  margin: 0.15rem 0;
-  list-style: disc;
+  margin: 0.05rem 0;
+  list-style: none !important;
 }
 
 .growi-plugin-toc ul {
-  margin: 0.15rem 0 0 1.2em;
-  padding: 0;
-  list-style: disc;
+  list-style: none !important;
+  margin: 0.1rem 0 0 0 !important;
+  padding: 0 !important;
 }
+
+.growi-plugin-toc-item-l1 > ul { margin-left: 1.2em !important; }
+.growi-plugin-toc-item-l2 > ul { margin-left: 1.1em !important; }
+.growi-plugin-toc-item-l3 > ul { margin-left: 0.9em !important; }
+.growi-plugin-toc-item-l4 > ul,
+.growi-plugin-toc-item-l5 > ul { margin-left: 0.7em !important; }
 
 .growi-plugin-toc a {
-  text-decoration: none;
-  color: var(--bs-link-color, #0070f3);
+  display: block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1.3;
+  text-decoration: none !important;
+  color: var(--bs-body-color, #333) !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.growi-plugin-toc a:hover {
-  color: var(--bs-link-hover-color, #0056b3);
-  text-decoration: underline;
+.growi-plugin-toc a::before {
+  content: "\203A";
+  display: inline-block;
+  margin-right: 0.4em;
+  color: var(--bs-primary, #0d6efd);
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.growi-plugin-toc a:hover,
+.growi-plugin-toc a:focus-visible {
+  background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
+  color: var(--bs-primary, #0d6efd) !important;
+  text-decoration: none !important;
+}
+
+.growi-plugin-toc a:focus-visible {
+  outline: 2px solid var(--bs-primary, #0d6efd);
+  outline-offset: 2px;
+}
+
+/* GROWI の固定ヘッダーに隠れないよう、アンカージャンプ先の見出しにスクロール余白を確保する。
+   ヘッダー高さの実測値に応じて要調整（現状は目安値） */
+h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
+  scroll-margin-top: 70px;
+}
+
+.growi-plugin-toc-item-l1 > a {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.growi-plugin-toc-item-l2 > a {
+  font-size: 0.92rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.growi-plugin-toc-item-l3 > a,
+.growi-plugin-toc-item-l4 > a,
+.growi-plugin-toc-item-l5 > a,
+.growi-plugin-toc-item-l6 > a {
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.7;
 }
 
 @media print {
   .growi-plugin-toc {
     break-inside: avoid;
-    background-color: transparent;
-    border-color: #ccc;
+    border-left-color: #ccc;
   }
 
   .growi-plugin-toc a::after {
