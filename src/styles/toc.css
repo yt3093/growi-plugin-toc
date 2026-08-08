@@ -21,8 +21,9 @@
   list-style: none !important;
 }
 
-/* list-style/padding は GROWI 本体側の ul リセットに勝つため !important が必要。
-   margin-left は階層別ルール（下記）に委ねるため、ここでは !important を付けない */
+/* list-style/padding/margin-top は GROWI 本体側の ul リセットに勝つため !important が必要。
+   margin-left は階層別ルール（下記）で !important 付きで指定するため、ここでは 0 のままでよい
+   （階層別ルールの !important がホスト側の ul スタイルにも自分自身のこの初期値にも確実に勝つ） */
 .growi-plugin-toc ul {
   list-style: none !important;
   margin-top: 0.1rem !important;
@@ -32,11 +33,11 @@
   padding: 0 !important;
 }
 
-.growi-plugin-toc-item-l1 > ul { margin-left: 1.2em; }
-.growi-plugin-toc-item-l2 > ul { margin-left: 1.1em; }
-.growi-plugin-toc-item-l3 > ul { margin-left: 0.9em; }
+.growi-plugin-toc-item-l1 > ul { margin-left: 1.2em !important; }
+.growi-plugin-toc-item-l2 > ul { margin-left: 1.1em !important; }
+.growi-plugin-toc-item-l3 > ul { margin-left: 0.9em !important; }
 .growi-plugin-toc-item-l4 > ul,
-.growi-plugin-toc-item-l5 > ul { margin-left: 0.7em; }
+.growi-plugin-toc-item-l5 > ul { margin-left: 0.7em !important; }
 
 /* font-size/font-weight/opacity は l3〜l6 の既定値。l1/l2 のみ下で個別に上書きする */
 .growi-plugin-toc a {
