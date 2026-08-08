@@ -13,11 +13,11 @@
 |---|---|
 | 拡張記法 | `[TOC]` / `[TOC level=N]`（大文字小文字不問、i フラグ） |
 | 変換タイミング | Markdown AST (mdast) 段階 — `remarkPlugins` に追加 |
-| 生成 HTML | `<ul class="growi-plugin-toc">` の中に `<li class="growi-plugin-toc-item-l{N}">` + `<a href="#{slug}">` |
+| 生成 HTML | `<ul class="growi-plugin-toc">` を起点に、見出しの深さに応じて `<li class="growi-plugin-toc-item-l{N}">` を実際に入れ子の `<ul>` で構成（フラット + margin-left インデントではなく、親子関係を持つツリー構造）。各 `<li>` 内に `<a href="#{slug}">` |
 | slug 生成 | `github-slugger` で GROWI 内部の `rehype-slug` と互換 |
 | 深さフィルタ | `level=N` 指定時は `depth > N` の見出しを除外。省略時は N=6（全件） |
 | 見出し 0 件 | `[TOC]` は展開されない（早期 return） |
-| スタイル | `src/styles/toc.css` 内 `.growi-plugin-toc`。配色は Bootstrap 5 CSS 変数 (`--bs-border-color` / `--bs-tertiary-bg` / `--bs-body-color` / `--bs-link-color`) を使用し GROWI ダークモードに自動追従。フォールバック値付き。`@media print` で折り返し防止・背景透過 |
+| スタイル | `src/styles/toc.css` 内 `.growi-plugin-toc`。左端のアクセントライン(`border-left`)+チェブロン(`›`)マーカー+ホバー/フォーカス時のハイライトを基調としたミニマルデザイン。タイトル文言は英語表記(`Table of Contents`)固定。色は `--toc-accent` / `--toc-accent-rgb`(`var(--bs-primary)` 等のエイリアス)に集約し GROWI のテーマ(ダークモード含む)に自動追従、フォールバック値付き。階層が深いほど文字を小さく・薄く(`opacity`)して視覚的な階層を表現。アンカージャンプ時に GROWI の固定ヘッダーに隠れないよう `h1〜h6[id]` に `scroll-margin-top`(`--toc-scroll-offset`、目安値のため要検証)を設定。`@media print` で折り返し防止・アクセントラインの色を print 用に固定 |
 | deactivate | モジュールスコープの `savedState` に元の `customGenerateViewOptions` を退避し、`deactivate()` 呼び出しで復元する |
 
 ## アーキテクチャ
@@ -52,8 +52,9 @@ growi-plugin-toc/
 - **`activate()`**: `growiFacade.markdownRenderer.optionsGenerators.customGenerateViewOptions` をラップし、`options.remarkPlugins` 末尾に `remarkToc` を追加。元の実装はモジュールスコープの `savedState` に退避する
 - **`deactivate()`**: `savedState.optionsGenerators.customGenerateViewOptions` を `savedState.original` に戻し `savedState = null` にリセット。これにより複数回の有効化/無効化でも正しく動作する
 - **`collectHeadings(tree)`**: `visit(tree, 'heading', ...)` で全 heading を走査し `GithubSlugger` インスタンスで slug を採番（同名見出しの連番 `-1`, `-2` も自動）
-- **`buildListItem(entry)`**: `data.hProperties.className` に配列で `['growi-plugin-toc-item-l${depth}']` を渡すことで、mdast→hast 変換後に `class` 属性として出力される。`dangerouslySetInnerHTML` / `innerHTML` / `html` ノードは一切使わない
-- **`buildTocList(headings, maxDepth)`**: `depth <= maxDepth` でフィルタして `list` ノードを生成。`data.hProperties.className: ['growi-plugin-toc']` を付与
+- **`buildTree(headings)`**: フラットな `HeadingEntry[]` をスタックベースのアルゴリズムで `HeadingNode[]`（`children` を持つ木構造）に変換。直前の見出しより深い depth は子として積み、同じか浅い depth が来たらスタックを pop して親を確定する。見出しレベルの飛び（h1 の直後に h3 が来る等）も depth の大小比較だけで自然に処理される
+- **`buildListItem(node)` / `buildList(nodes)`**: 再帰的に `listItem` を構築。`node.children.length > 0` の場合、`listItem.children` に子見出し用の `list` ノードを追加してネストさせる。`data.hProperties.className` に配列で `['growi-plugin-toc-item-l${depth}']` を渡すことで、mdast→hast 変換後に `class` 属性として出力される。`dangerouslySetInnerHTML` / `innerHTML` / `html` ノードは一切使わない
+- **`buildTocList(headings, maxDepth)`**: `depth <= maxDepth` でフィルタしてから `buildTree` → `buildList` を呼び、最上位の `list` ノードにのみ `data.hProperties.className: ['growi-plugin-toc']` を付与
 - **`reconstructSource(children)`**: `[TOC]` は remark-parse によって `linkReference` ノードに化けるため、`text` と `linkReference` の両方から元文字列を再構築してから regex マッチする（下記「ハマりどころ 5」参照）
 - **`[TOC level=N]` のパース**: `TOC_PATTERN = /^\[TOC(?:\s+level=(\d+))?\]$/i`。`match[1]` が `undefined` のとき `maxDepth = 6`。指定値は `Math.min(6, Math.max(1, parseInt(...)))` で 1〜6 に clamp
 - **`window` の型付け**: `src/types.ts` に `declare global { interface Window { pluginActivators?: ... } }` を追加し、`client-entry.tsx` で `(window as any)` キャストを排除している
@@ -134,6 +135,12 @@ function reconstructSource(children: PhrasingContent[]): string | null {
 
 GROWI は内部で `rehype-slug` 系のスラッグを heading に付与している。`[TOC]` から heading へのアンカーリンクを正確に生成するには `github-slugger` を使う。同名見出しの連番カウンタも `GithubSlugger` の**同一インスタンス**に任せることで、GROWI の採番と一致させる。
 
+### 7. ホストページの CSS がプラグインのスタイルを上書きすることがある
+
+GROWI 本体側のグローバルな `a` / `ul` / `li` スタイル(詳細度や読み込み順によっては)がプラグインの CSS より勝ってしまうことがある。実例: `text-decoration: none` を指定してもアンダーラインが消えない、`:hover` で文字色が変わらない、`ul` の余白が二重にかかってインデントが大きくなる、等。
+
+→ 装飾に関わるプロパティ(`text-decoration` / `color` / `list-style` / `margin` / `padding` の一部)に絞って `!important` を付与し、ホストページのスタイルに確実に勝つようにする。ただし付けすぎると自分自身のルール同士(例: ベースの `ul` ルールと階層別の `margin-left` ルール)が衝突し、無意味な `!important` の応酬になる。境界線となる値(例: 階層別の `margin-left`)はソース順で後に書かれたルールに委ね、ホスト側と競合する箇所(`list-style` / `padding` / 基本の `text-decoration` / `color`)にだけ `!important` を残すこと。
+
 ## デプロイ手順
 
 ```bash
@@ -155,10 +162,13 @@ GROWI 管理画面 `/admin/plugins` で **削除 → 再インストール**。
 6. `[TOC level=0]` / `[TOC level=99]` などの異常値で意図しない表示にならない（1〜6 に clamp）
 7. 見出しがない / `[TOC]` がないページで副作用が起きない
 8. 同名見出しが複数ある場合、slug が `-1`, `-2` 連番になってリンクが正確に機能する
-9. GROWI のダークモード切り替え時に TOC の配色（ボーダー・背景・テキスト・リンク）が自動追従する
-10. ブラウザの印刷プレビューで TOC が途中でページ分断されない
-11. プラグインを無効化すると `[TOC]` が展開されない状態に戻る
-12. 無効化 → 再有効化を繰り返しても TOC が正常に動作する（`deactivate` による復元が正常）
+9. 見出しの階層（h1 > h2 > h3 等）に応じて `<ul>` が実際に入れ子になっている（DevTools で確認）。h1 の直後に h3 が来るなど深さが飛ぶケースでも意図しない階層崩れが起きない
+10. GROWI のダークモード切り替え時に TOC の配色（ボーダー・背景・テキスト・リンク）が自動追従する
+11. ブラウザの印刷プレビューで TOC が途中でページ分断されない
+12. プラグインを無効化すると `[TOC]` が展開されない状態に戻る
+13. 無効化 → 再有効化を繰り返しても TOC が正常に動作する（`deactivate` による復元が正常）
+14. Tab キーで TOC 内のリンクにフォーカスを移動すると、ホバー時と同様のハイライト + アウトラインが表示される
+15. TOC のリンクをクリックしてアンカージャンプした際、見出しが GROWI の固定ヘッダーに隠れない（隠れる場合は `--toc-scroll-offset` の値を要調整）
 
 ## 会話ガイドライン
 

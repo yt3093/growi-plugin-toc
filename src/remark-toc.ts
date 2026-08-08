@@ -14,6 +14,10 @@ type HeadingEntry = {
   slug: string;
 };
 
+type HeadingNode = HeadingEntry & {
+  children: HeadingNode[];
+};
+
 function collectHeadings(tree: Root): HeadingEntry[] {
   const slugger = new GithubSlugger();
   const headings: HeadingEntry[] = [];
@@ -27,35 +31,66 @@ function collectHeadings(tree: Root): HeadingEntry[] {
   return headings;
 }
 
-function buildListItem(entry: HeadingEntry): ListItem {
+function buildTree(headings: HeadingEntry[]): HeadingNode[] {
+  const root: HeadingNode[] = [];
+  const stack: HeadingNode[] = [];
+
+  for (const entry of headings) {
+    const node: HeadingNode = { ...entry, children: [] };
+
+    while (stack.length > 0 && stack[stack.length - 1].depth >= entry.depth) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      root.push(node);
+    }
+    else {
+      stack[stack.length - 1].children.push(node);
+    }
+
+    stack.push(node);
+  }
+
+  return root;
+}
+
+function buildListItem(node: HeadingNode): ListItem {
   const link: Link = {
     type: 'link',
-    url: `#${entry.slug}`,
-    children: [{ type: 'text', value: entry.text } as Text],
+    url: `#${node.slug}`,
+    children: [{ type: 'text', value: node.text } as Text],
   };
-  const indent = Math.max(0, entry.depth - 1);
+
+  const children: ListItem['children'] = [{ type: 'paragraph', children: [link] } as Paragraph];
+  if (node.children.length > 0) {
+    children.push(buildList(node.children));
+  }
+
   return {
     type: 'listItem',
     spread: false,
     data: {
-      hProperties: { className: [`growi-plugin-toc-item-l${entry.depth}`], style: `margin-left: ${indent * 1.2}em` },
+      hProperties: { className: [`growi-plugin-toc-item-l${node.depth}`] },
     },
-    children: [{ type: 'paragraph', children: [link] } as Paragraph],
+    children,
+  };
+}
+
+function buildList(nodes: HeadingNode[]): List {
+  return {
+    type: 'list',
+    ordered: false,
+    spread: false,
+    children: nodes.map(buildListItem),
   };
 }
 
 function buildTocList(headings: HeadingEntry[], maxDepth: number): List {
   const filtered = headings.filter(h => h.depth <= maxDepth);
-
-  const list: List = {
-    type: 'list',
-    ordered: false,
-    spread: false,
-    children: filtered.map(buildListItem),
-    data: {
-      hProperties: { className: ['growi-plugin-toc'] },
-    },
-  };
+  const tree = buildTree(filtered);
+  const list = buildList(tree);
+  list.data = { hProperties: { className: ['growi-plugin-toc'] } };
 
   return list;
 }
