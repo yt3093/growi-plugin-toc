@@ -17,7 +17,7 @@
 | slug 生成 | `github-slugger` で GROWI 内部の `rehype-slug` と互換 |
 | 深さフィルタ | `level=N` 指定時は `depth > N` の見出しを除外。省略時は N=6（全件） |
 | 見出し 0 件 | `[TOC]` は展開されない（早期 return） |
-| スタイル | `src/styles/toc.css` 内 `.growi-plugin-toc`。配色は Bootstrap 5 CSS 変数 (`--bs-border-color` / `--bs-tertiary-bg` / `--bs-body-color` / `--bs-link-color`) を使用し GROWI ダークモードに自動追従。フォールバック値付き。`@media print` で折り返し防止・背景透過 |
+| スタイル | `src/styles/toc.css` 内 `.growi-plugin-toc`。左端のアクセントライン(`border-left`)+チェブロン(`›`)マーカー+ホバー/フォーカス時のハイライトを基調としたミニマルデザイン。タイトル文言は英語表記(`Table of Contents`)固定。色は `--toc-accent` / `--toc-accent-rgb`(`var(--bs-primary)` 等のエイリアス)に集約し GROWI のテーマ(ダークモード含む)に自動追従、フォールバック値付き。階層が深いほど文字を小さく・薄く(`opacity`)して視覚的な階層を表現。アンカージャンプ時に GROWI の固定ヘッダーに隠れないよう `h1〜h6[id]` に `scroll-margin-top`(`--toc-scroll-offset`、目安値のため要検証)を設定。`@media print` で折り返し防止・アクセントラインの色を print 用に固定 |
 | deactivate | モジュールスコープの `savedState` に元の `customGenerateViewOptions` を退避し、`deactivate()` 呼び出しで復元する |
 
 ## アーキテクチャ
@@ -135,6 +135,12 @@ function reconstructSource(children: PhrasingContent[]): string | null {
 
 GROWI は内部で `rehype-slug` 系のスラッグを heading に付与している。`[TOC]` から heading へのアンカーリンクを正確に生成するには `github-slugger` を使う。同名見出しの連番カウンタも `GithubSlugger` の**同一インスタンス**に任せることで、GROWI の採番と一致させる。
 
+### 7. ホストページの CSS がプラグインのスタイルを上書きすることがある
+
+GROWI 本体側のグローバルな `a` / `ul` / `li` スタイル(詳細度や読み込み順によっては)がプラグインの CSS より勝ってしまうことがある。実例: `text-decoration: none` を指定してもアンダーラインが消えない、`:hover` で文字色が変わらない、`ul` の余白が二重にかかってインデントが大きくなる、等。
+
+→ 装飾に関わるプロパティ(`text-decoration` / `color` / `list-style` / `margin` / `padding` の一部)に絞って `!important` を付与し、ホストページのスタイルに確実に勝つようにする。ただし付けすぎると自分自身のルール同士(例: ベースの `ul` ルールと階層別の `margin-left` ルール)が衝突し、無意味な `!important` の応酬になる。境界線となる値(例: 階層別の `margin-left`)はソース順で後に書かれたルールに委ね、ホスト側と競合する箇所(`list-style` / `padding` / 基本の `text-decoration` / `color`)にだけ `!important` を残すこと。
+
 ## デプロイ手順
 
 ```bash
@@ -161,6 +167,8 @@ GROWI 管理画面 `/admin/plugins` で **削除 → 再インストール**。
 11. ブラウザの印刷プレビューで TOC が途中でページ分断されない
 12. プラグインを無効化すると `[TOC]` が展開されない状態に戻る
 13. 無効化 → 再有効化を繰り返しても TOC が正常に動作する（`deactivate` による復元が正常）
+14. Tab キーで TOC 内のリンクにフォーカスを移動すると、ホバー時と同様のハイライト + アウトラインが表示される
+15. TOC のリンクをクリックしてアンカージャンプした際、見出しが GROWI の固定ヘッダーに隠れない（隠れる場合は `--toc-scroll-offset` の値を要調整）
 
 ## 会話ガイドライン
 
