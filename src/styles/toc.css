@@ -1,5 +1,7 @@
 .growi-plugin-toc {
-  border-left: 3px solid var(--bs-primary, #0d6efd);
+  --toc-accent: var(--bs-primary, #0d6efd);
+  --toc-accent-rgb: var(--bs-primary-rgb, 13, 110, 253);
+  border-left: 3px solid var(--toc-accent);
   padding: 0.25rem 0 0.25rem 1rem;
   margin: 1rem 0;
   background-color: transparent;
@@ -19,23 +21,32 @@
   list-style: none !important;
 }
 
+/* list-style/padding は GROWI 本体側の ul リセットに勝つため !important が必要。
+   margin-left は階層別ルール（下記）に委ねるため、ここでは !important を付けない */
 .growi-plugin-toc ul {
   list-style: none !important;
-  margin: 0.1rem 0 0 0 !important;
+  margin-top: 0.1rem !important;
+  margin-right: 0;
+  margin-bottom: 0;
+  margin-left: 0;
   padding: 0 !important;
 }
 
-.growi-plugin-toc-item-l1 > ul { margin-left: 1.2em !important; }
-.growi-plugin-toc-item-l2 > ul { margin-left: 1.1em !important; }
-.growi-plugin-toc-item-l3 > ul { margin-left: 0.9em !important; }
+.growi-plugin-toc-item-l1 > ul { margin-left: 1.2em; }
+.growi-plugin-toc-item-l2 > ul { margin-left: 1.1em; }
+.growi-plugin-toc-item-l3 > ul { margin-left: 0.9em; }
 .growi-plugin-toc-item-l4 > ul,
-.growi-plugin-toc-item-l5 > ul { margin-left: 0.7em !important; }
+.growi-plugin-toc-item-l5 > ul { margin-left: 0.7em; }
 
+/* font-size/font-weight/opacity は l3〜l6 の既定値。l1/l2 のみ下で個別に上書きする */
 .growi-plugin-toc a {
   display: block;
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
   line-height: 1.3;
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.7;
   text-decoration: none !important;
   color: var(--bs-body-color, #333) !important;
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -45,32 +56,26 @@
   content: "\203A";
   display: inline-block;
   margin-right: 0.4em;
-  color: var(--bs-primary, #0d6efd);
+  color: var(--toc-accent);
   font-weight: bold;
   font-size: 1rem;
 }
 
 .growi-plugin-toc a:hover,
 .growi-plugin-toc a:focus-visible {
-  background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
-  color: var(--bs-primary, #0d6efd) !important;
-  text-decoration: none !important;
+  background-color: rgba(var(--toc-accent-rgb), 0.08);
+  color: var(--toc-accent) !important;
 }
 
 .growi-plugin-toc a:focus-visible {
-  outline: 2px solid var(--bs-primary, #0d6efd);
+  outline: 2px solid var(--toc-accent);
   outline-offset: 2px;
-}
-
-/* GROWI の固定ヘッダーに隠れないよう、アンカージャンプ先の見出しにスクロール余白を確保する。
-   ヘッダー高さの実測値に応じて要調整（現状は目安値） */
-h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
-  scroll-margin-top: 70px;
 }
 
 .growi-plugin-toc-item-l1 > a {
   font-size: 1rem;
   font-weight: 600;
+  opacity: 1;
 }
 
 .growi-plugin-toc-item-l2 > a {
@@ -79,13 +84,16 @@ h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
   opacity: 0.85;
 }
 
-.growi-plugin-toc-item-l3 > a,
-.growi-plugin-toc-item-l4 > a,
-.growi-plugin-toc-item-l5 > a,
-.growi-plugin-toc-item-l6 > a {
-  font-size: 0.85rem;
-  font-weight: 400;
-  opacity: 0.7;
+/* GROWI の固定ヘッダーに隠れないよう、アンカージャンプ先の見出しにスクロール余白を確保する。
+   --toc-scroll-offset はヘッダー高さの目安値。実測値に応じて要調整
+   （既知の制約: この h1〜h6 セレクタは .growi-plugin-toc 配下にスコープされておらず、
+   [TOC] を使わないページの見出しにも適用される。deactivate() でも解除されない） */
+:root {
+  --toc-scroll-offset: 70px;
+}
+
+h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
+  scroll-margin-top: var(--toc-scroll-offset);
 }
 
 @media print {
